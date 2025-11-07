@@ -2,36 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text Compression & Decompression</title>
+  <title>Social Network Friend Recommender</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Text Compression & Decompression</h1>
-    <p>Enter text below and choose whether to compress or decompress it.</p>
-  </header>
+  <div class="wrapper">
+    <header>
+      <h1>🤝 Friend Recommender</h1>
+      <p>Discover new connections powered by your social network</p>
+    </header>
 
-  <main class="container">
-    <section class="input-section">
-      <label for="inputText">Enter your text:</label>
-      <textarea id="inputText" placeholder="Type or paste your text here..."></textarea>
-    </section>
+    <main>
+      <div class="glass-card">
+        <label for="username">Enter Username</label>
+        <input type="text" id="username" placeholder="e.g. Alice" value="Alice">
+        <button id="recommend-btn">Get Recommendations</button>
 
-    <section class="buttons">
-      <button class="btn compress-btn">Compress</button>
-      <button class="btn decompress-btn">Decompress</button>
-      <button class="btn clear-btn">Clear</button>
-    </section>
+        <div class="results" id="results">
+          <p class="placeholder">Enter a username and click the button to see recommendations.</p>
+        </div>
+      </div>
+    </main>
 
-    <section class="output-section">
-      <label for="outputText">Output:</label>
-      <textarea id="outputText" placeholder="Result will appear here..."></textarea>
-    </section>
-  </main>
+    <footer>
+      © 2025 Social Recommender • Made with 💙 locally on your machine
+    </footer>
+  </div>
 
-  <footer>
-    <p>Made for demo purposes — no actual backend connected.</p>
-  </footer>
+  <script src="script.js"></script>
 </body>
 </html>
