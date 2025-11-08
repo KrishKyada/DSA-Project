@@ -109,3 +109,109 @@ button:active {
   display: flex;
   flex-direction: column;
 }
+
+textarea {
+  height: 340px;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  font-family: monospace;
+  font-size: 14px;
+  resize: vertical;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.4);
+}
+
+.result {
+  margin-top: 32px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.grid.small {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 8px rgba(99,102,241,0.2);
+}
+
+.card .label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card .value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 4px;
+}
+
+.card.highlight {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.1);
+}
+
+.big { font-size: 1.4rem; }
+
+.msg {
+  background: #0f172a;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.bar {
+  height: 12px;
+  background: #111827;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  margin-top: 12px;
+}
+
+#barFill {
+  height: 100%;
+  width: 0%;
+  background: var(--good);
+  transition: width 0.6s ease;
+}
+
+footer {
+  margin-top: 32px;
+  text-align: center;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.hidden { display: none; }
+
+@media (max-width: 900px) {
+  .panes { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
