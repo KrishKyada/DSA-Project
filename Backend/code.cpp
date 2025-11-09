@@ -35,6 +35,34 @@ vector<string> tokenize(const string &code) {
     return tokens;
 }
 
+// ---------------- Fingerprints via rolling hash + winnowing ------------------
+vector<uint64_t> fingerprintTokens(const vector<string> &tokens, int window) {
+    vector<uint64_t> hashes;
+    if (tokens.empty() || window <= 0) return hashes;
+
+    // Map tokens to integer ids (stable vocabulary in this run)
+    unordered_map<string,int> id;
+    id.reserve(tokens.size()*2);
+    vector<int> ids; ids.reserve(tokens.size());
+    int nxt = 1;
+    for (auto &t : tokens) {
+        auto it = id.find(t);
+        if (it == id.end()) it = id.emplace(t, nxt++).first;
+        ids.push_back(it->second);
+    }
+
+    // Rolling hash of k=1 token (simple and fast)
+    vector<uint64_t> roll(ids.size());
+    uint64_t h = 0;
+    for (size_t i = 0; i < ids.size(); ++i) {
+        h = (h * BASE + (uint64_t)ids[i]) % MOD;
+        roll[i] = h;
+    }
+
+    if ((int)roll.size() < window)
+    return;
+
+}
 int main() {
     string code;
     cout << "Enter code (end with ~):\n";
