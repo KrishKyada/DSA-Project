@@ -34,6 +34,18 @@ vector<string> tokenize(const string &code) {
     if (!cur.empty()) tokens.push_back(cur);
     return tokens;
 }
+// Calculates Jaccard similarity between two fingerprint vectors to check code similarity
+
+double jaccardFingerprint(const vector<uint64_t> &a, const vector<uint64_t> &b) {
+    if (a.empty() && b.empty()) return 1.0;
+    unordered_set<uint64_t> setA(a.begin(), a.end());
+    unordered_set<uint64_t> setB(b.begin(), b.end());
+    int common = 0;
+    for (auto x : setA) if (setB.count(x)) common++;
+    int total = setA.size() + setB.size() - common;
+    if (total == 0) return 0.0;
+    return (double)common / total;
+}
 
 int main() {
     string code;
