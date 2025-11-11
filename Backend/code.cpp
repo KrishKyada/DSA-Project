@@ -72,7 +72,25 @@ struct PDG {
     vector<Node> nodes;                     // All nodes in the PDG
     unordered_map<string, int> def;         // Variable to last definition mapping
 
-    // Inside PDG struct
+
+
+// Adds a node to the PDG
+void addNode(const string& stmt) {
+    Node n;
+    n.id = static_cast<int>(nodes.size());
+    n.stmt = stmt;
+    nodes.push_back(n);
+}
+
+// Adds dependency edges based on variable usage
+void addEdges(int currentId, const string& rhs) {
+    for (auto& [var, defNode] : def) {
+        if (rhs.find(var) != string::npos) {
+            nodes[defNode].edges.push_back(currentId);
+        }
+    }
+}
+    
 
 // Extract left-hand side of a statement
 string extractLHS(const string& stmt) {
