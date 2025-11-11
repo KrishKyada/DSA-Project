@@ -71,4 +71,19 @@ struct Node {
 struct PDG {
     vector<Node> nodes;                     // All nodes in the PDG
     unordered_map<string, int> def;         // Variable to last definition mapping
+
+    // Inside PDG struct
+
+// Extract left-hand side of a statement
+string extractLHS(const string& stmt) {
+    size_t pos = stmt.find('=');
+    return (pos != string::npos) ? stmt.substr(0, pos) : "";
+}
+
+// Extract right-hand side of a statement
+string extractRHS(const string& stmt) {
+    size_t pos = stmt.find('=');
+    return (pos != string::npos && pos + 1 < stmt.size()) ? stmt.substr(pos + 1) : "";
+}
+
 };
