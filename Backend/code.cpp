@@ -104,4 +104,18 @@ string extractRHS(const string& stmt) {
     return (pos != string::npos && pos + 1 < stmt.size()) ? stmt.substr(pos + 1) : "";
 }
 
+// Builds the PDG from the list of nodes
+
+void build() {
+    for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
+        string lhs = extractLHS(nodes[i].stmt);
+        string rhs = extractRHS(nodes[i].stmt);
+
+        addEdges(i, rhs);
+
+        if (!lhs.empty())
+            def[lhs] = i;
+    }
+}
+
 };
