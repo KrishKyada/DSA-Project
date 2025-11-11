@@ -72,50 +72,47 @@ struct PDG {
     vector<Node> nodes;                     // All nodes in the PDG
     unordered_map<string, int> def;         // Variable to last definition mapping
 
+    // Adds a node to the PDG
+    void addNode(const string& stmt) {
+        Node n;
+        n.id = static_cast<int>(nodes.size());
+        n.stmt = stmt;
+        nodes.push_back(n);
+    }
 
-
-// Adds a node to the PDG
-void addNode(const string& stmt) {
-    Node n;
-    n.id = static_cast<int>(nodes.size());
-    n.stmt = stmt;
-    nodes.push_back(n);
-}
-
-// Adds dependency edges based on variable usage
-void addEdges(int currentId, const string& rhs) {
-    for (auto& [var, defNode] : def) {
-        if (rhs.find(var) != string::npos) {
-            nodes[defNode].edges.push_back(currentId);
+    // Adds dependency edges based on variable usage
+    void addEdges(int currentId, const string& rhs) {
+        for (auto& pair : def) {
+            const string& var = pair.first;
+            int defNode = pair.second;
+            if (rhs.find(var) != string::npos) {
+                nodes[defNode].edges.push_back(currentId);
+            }
         }
     }
-}
-    
 
-// Extract left-hand side of a statement
-string extractLHS(const string& stmt) {
-    size_t pos = stmt.find('=');
-    return (pos != string::npos) ? stmt.substr(0, pos) : "";
-}
-
-// Extract right-hand side of a statement
-string extractRHS(const string& stmt) {
-    size_t pos = stmt.find('=');
-    return (pos != string::npos && pos + 1 < stmt.size()) ? stmt.substr(pos + 1) : "";
-}
-
-// Builds the PDG from the list of nodes
-
-void build() {
-    for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
-        string lhs = extractLHS(nodes[i].stmt);
-        string rhs = extractRHS(nodes[i].stmt);
-
-        addEdges(i, rhs);
-
-        if (!lhs.empty())
-            def[lhs] = i;
+    // Extract left-hand side of a statement
+    string extractLHS(const string& stmt) {
+        size_t pos = stmt.find('=');
+        return (pos != string::npos) ? stmt.substr(0, pos) : "";
     }
-}
 
+    // Extract right-hand side of a statement
+    string extractRHS(const string& stmt) {
+        size_t pos = stmt.find('=');
+        return (pos != string::npos && pos + 1 < stmt.size()) ? stmt.substr(pos + 1) : "";
+    }
+
+    // Builds the PDG from the list of nodes
+    void build() {
+        for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
+            string lhs = extractLHS(nodes[i].stmt);
+            string rhs = extractRHS(nodes[i].stmt);
+
+            addEdges(i, rhs);
+
+            if (!lhs.empty())
+                def[lhs] = i;
+        }
+    }
 };
