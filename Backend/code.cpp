@@ -61,3 +61,14 @@ int main() {
     cout << "\nToken Count: " << tok.size() << "\n";
     return 0;
 }
+
+struct Node {
+    int id;                // Unique identifier for this node
+    string stmt;           // Code statement, e.g., "a=b+c"
+    vector<int> edges;     // Edges pointing to dependent nodes
+};
+
+struct PDG {
+    vector<Node> nodes;                     // All nodes in the PDG
+    unordered_map<string, int> def;         // Variable to last definition mapping
+};
