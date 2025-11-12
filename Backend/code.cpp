@@ -150,3 +150,28 @@ vector<string> normalizeAll(const vector<string>& snippets) {
     return result;
 }
 
+// ========================= PDG Similarity =========================
+
+// Build edge set representation for a PDG
+unordered_set<string> getEdgeSet(PDG& g) {
+    unordered_set<string> edgeSet;
+    for (auto& n : g.nodes)
+        for (int e : n.edges)
+            edgeSet.insert(to_string(n.id) + "->" + to_string(e));
+    return edgeSet;
+}
+
+// Compute structural similarity between two PDGs
+double pdgSim(PDG& A, PDG& B) {
+    auto setA = getEdgeSet(A);
+    auto setB = getEdgeSet(B);
+
+    int common = 0;
+    for (const auto& edge : setA)
+        if (setB.count(edge))
+            common++;
+
+    int total = max(setA.size(), setB.size());
+    return total ? static_cast<double>(common) / total : 1.0;
+}
+
