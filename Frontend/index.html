@@ -9,24 +9,28 @@
 <body>
   <header>
     <h1>🧠 CodePlag Analyzer</h1>
-    <p>All-C++ Backend • Plagiarism Detection via Winnowing · Edit Distance · AST</p>
+    <p>Advanced C++ Plagiarism Detection using Winnowing · Edit Distance · AST Parsing</p>
+    <button id="themeToggle" class="small-btn">🌗 Toggle Theme</button>
   </header>
 
   <main>
+    <!-- Controls -->
     <section class="controls">
       <div class="control-box">
         <div class="field">
-          <label>k-gram (k)</label>
+          <label for="k">k-gram (k)</label>
           <input id="k" type="number" min="2" value="5" />
         </div>
         <div class="field">
-          <label>Window (w)</label>
+          <label for="w">Window (w)</label>
           <input id="w" type="number" min="2" value="4" />
         </div>
         <button id="analyzeBtn">🔍 Analyze Codes</button>
+        <button id="clearBtn" class="secondary">🧹 Clear</button>
       </div>
     </section>
 
+    <!-- Code Panes -->
     <section class="panes">
       <div class="pane">
         <h3>Code A</h3>
@@ -38,6 +42,10 @@
       </div>
     </section>
 
+    <!-- Loading -->
+    <div id="loading" class="loading hidden">⏳ Analyzing, please wait...</div>
+
+    <!-- Result Section -->
     <section id="result" class="result hidden">
       <h3>📊 Analysis Result</h3>
       <div class="grid">
@@ -54,13 +62,18 @@
         <div class="card"><div class="label">Fingerprints (B)</div><div id="fpsB" class="value">—</div></div>
       </div>
 
+      <div class="meter">
+        <div id="bar" class="bar"><div id="barFill"></div></div>
+        <div id="barPercent" class="bar-percent">—%</div>
+      </div>
+
       <pre id="msg" class="msg"></pre>
-      <div id="bar" class="bar"><div id="barFill"></div></div>
+      <button id="downloadBtn" class="small-btn">💾 Download Report</button>
     </section>
   </main>
 
   <footer>
-    <small>Made with ❤️ using pure C++ logic and Flask bridge</small>
+    <small>Made with ❤️ in C++ and Flask · © 2025 CodePlag Analyzer</small>
   </footer>
 
   <script src="app.js"></script>
