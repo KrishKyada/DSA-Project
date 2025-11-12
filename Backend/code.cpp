@@ -116,3 +116,37 @@ struct PDG {
         }
     }
 };
+
+// ========================= Code Normalization =========================
+
+// Removes comments and whitespace from a single code snippet
+string normalize(const string& code) {
+    string out;
+    bool inComment = false;
+
+    for (size_t i = 0; i < code.size(); i++) {
+        if (!inComment && i + 1 < code.size() && code[i] == '/' && code[i + 1] == '/') {
+            inComment = true;
+            i++;
+            continue;
+        }
+        if (inComment && code[i] == '\n') {
+            inComment = false;
+            continue;
+        }
+        if (!inComment && !isspace(static_cast<unsigned char>(code[i]))) {
+            out += code[i];
+        }
+    }
+    return out;
+}
+
+// Normalize multiple snippets at once
+vector<string> normalizeAll(const vector<string>& snippets) {
+    vector<string> result;
+    result.reserve(snippets.size());
+    for (const auto& s : snippets)
+        result.push_back(normalize(s));
+    return result;
+}
+
