@@ -115,6 +115,17 @@ struct PDG {
                 def[lhs] = i;
         }
     }
+
+    // Inside PDG struct
+    void print() {
+        cout << "PDG Nodes:\n";
+        for (auto& n : nodes) {
+            cout << n.id << ": " << n.stmt << " -> ";
+            for (int e : n.edges) cout << e << " ";
+            cout << "\n";
+        }
+    }
+
 };
 
 // ========================= Code Normalization =========================
