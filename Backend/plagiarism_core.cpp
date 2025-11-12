@@ -61,3 +61,128 @@ int main() {
     cout << "\nToken Count: " << tok.size() << "\n";
     return 0;
 }
+
+struct Node {
+    int id;                // Unique identifier for this node
+    string stmt;           // Code statement, e.g., "a=b+c"
+    vector<int> edges;     // Edges pointing to dependent nodes
+};
+
+struct PDG {
+    vector<Node> nodes;                     // All nodes in the PDG
+    unordered_map<string, int> def;         // Variable to last definition mapping
+
+    // Adds a node to the PDG
+    void addNode(const string& stmt) {
+        Node n;
+        n.id = static_cast<int>(nodes.size());
+        n.stmt = stmt;
+        nodes.push_back(n);
+    }
+
+    // Adds dependency edges based on variable usage
+    void addEdges(int currentId, const string& rhs) {
+        for (auto& pair : def) {
+            const string& var = pair.first;
+            int defNode = pair.second;
+            if (rhs.find(var) != string::npos) {
+                nodes[defNode].edges.push_back(currentId);
+            }
+        }
+    }
+
+    // Extract left-hand side of a statement
+    string extractLHS(const string& stmt) {
+        size_t pos = stmt.find('=');
+        return (pos != string::npos) ? stmt.substr(0, pos) : "";
+    }
+
+    // Extract right-hand side of a statement
+    string extractRHS(const string& stmt) {
+        size_t pos = stmt.find('=');
+        return (pos != string::npos && pos + 1 < stmt.size()) ? stmt.substr(pos + 1) : "";
+    }
+
+    // Builds the PDG from the list of nodes
+    void build() {
+        for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
+            string lhs = extractLHS(nodes[i].stmt);
+            string rhs = extractRHS(nodes[i].stmt);
+
+            addEdges(i, rhs);
+
+            if (!lhs.empty())
+                def[lhs] = i;
+        }
+    }
+
+    // Inside PDG struct
+    void print() {
+        cout << "PDG Nodes:\n";
+        for (auto& n : nodes) {
+            cout << n.id << ": " << n.stmt << " -> ";
+            for (int e : n.edges) cout << e << " ";
+            cout << "\n";
+        }
+    }
+
+};
+
+// ========================= Code Normalization =========================
+
+// Removes comments and whitespace from a single code snippet
+string normalize(const string& code) {
+    string out;
+    bool inComment = false;
+
+    for (size_t i = 0; i < code.size(); i++) {
+        if (!inComment && i + 1 < code.size() && code[i] == '/' && code[i + 1] == '/') {
+            inComment = true;
+            i++;
+            continue;
+        }
+        if (inComment && code[i] == '\n') {
+            inComment = false;
+            continue;
+        }
+        if (!inComment && !isspace(static_cast<unsigned char>(code[i]))) {
+            out += code[i];
+        }
+    }
+    return out;
+}
+
+// Normalize multiple snippets at once
+vector<string> normalizeAll(const vector<string>& snippets) {
+    vector<string> result;
+    result.reserve(snippets.size());
+    for (const auto& s : snippets)
+        result.push_back(normalize(s));
+    return result;
+}
+
+// ========================= PDG Similarity =========================
+
+// Build edge set representation for a PDG
+unordered_set<string> getEdgeSet(PDG& g) {
+    unordered_set<string> edgeSet;
+    for (auto& n : g.nodes)
+        for (int e : n.edges)
+            edgeSet.insert(to_string(n.id) + "->" + to_string(e));
+    return edgeSet;
+}
+
+// Compute structural similarity between two PDGs
+double pdgSim(PDG& A, PDG& B) {
+    auto setA = getEdgeSet(A);
+    auto setB = getEdgeSet(B);
+
+    int common = 0;
+    for (const auto& edge : setA)
+        if (setB.count(edge))
+            common++;
+
+    int total = max(setA.size(), setB.size());
+    return total ? static_cast<double>(common) / total : 1.0;
+}
+
