@@ -86,6 +86,71 @@ DSA-Project/
 
    Note: If you prefer to serve the frontend separately, you can run a static server in the `Frontend/` folder (for example, `python3 -m http.server 5000`) and open the served page.
 
+   ### Quick start (Windows)
+
+   Option A — MSYS2 / MinGW (recommended if you have GNU toolchain):
+
+   1. Install MSYS2 and open the MinGW64 shell. Install the toolchain:
+
+   ```powershell
+   pacman -Syu
+   pacman -S mingw-w64-x86_64-toolchain
+   ```
+
+   2. Compile the C++ core (inside the MinGW64 shell):
+
+   ```bash
+   cd /c/path/to/DSA-Project/Backend
+   g++ -std=c++23 -O2 plagiarism_core.cpp -o plagiarism_core.exe
+   ```
+
+   3. Edit `Backend/server.py` to point to the `.exe` on Windows (one-line change):
+
+   Open `Backend/server.py` and change the binary path line near the top to:
+
+   ```python
+   BINARY_PATH = os.path.join(SCRIPT_DIR, "plagiarism_core.exe")
+   ```
+
+   Option B — Visual Studio (MSVC):
+
+   1. Open "x64 Native Tools Command Prompt for VS" and compile with cl:
+
+   ```powershell
+   cl /std:c++23 /O2 plagiarism_core.cpp /Fe:plagiarism_core.exe
+   ```
+
+   2. Same as above: ensure `Backend/server.py` references `plagiarism_core.exe`.
+
+   Python environment & server (Windows)
+
+   1. Create and activate venv (PowerShell):
+
+   ```powershell
+   cd C:\path\to\DSA-Project\Backend
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1   # PowerShell
+   # or for cmd.exe: .\.venv\Scripts\activate.bat
+   pip install --upgrade pip
+   pip install flask flask-cors
+   ```
+
+   2. Run the server (PowerShell or cmd):
+
+   ```powershell
+   python server.py
+   ```
+
+   3. Open the frontend:
+
+   ```
+   http://127.0.0.1:5000/
+   ```
+
+   Notes:
+   - If you compiled `plagiarism_core.exe`, you must update `server.py` to point to that filename on Windows (see above). Alternatively, you can rename the `.exe` to `plagiarism_core` but keeping the `.exe` and updating `server.py` is clearer.
+   - Use the MinGW shell when running gcc-built binaries if you encounter runtime/locale issues.
+
 ---
 
 ## 🔌 Server details
