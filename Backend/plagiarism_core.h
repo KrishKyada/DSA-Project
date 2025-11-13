@@ -13,8 +13,10 @@ struct AnalyzeResult {
 
 string normalizeStrip(const string& s);
 vector<string> tokenize(const string& code);
-vector<uint64_t> fingerprintTokens(const vector<string>& tokens, int window);
-double jaccardFingerprint(const vector<uint64_t>& a, const vector<uint64_t>& b);
-AnalyzeResult analyzePair(const string& codeA, const string& codeB, int window);
+vector<uint64_t> computeFingerprints(const vector<string>& tokens, int window_size);
+double jaccardSimilarity(const vector<uint64_t>& fp1, const vector<uint64_t>& fp2);
+double editSimilarity(const vector<string>& tok1, const vector<string>& tok2);
+double astStructuralSimilarity(const vector<string>& tok1, const vector<string>& tok2);
+double pdgSimilarity(const vector<string>& tok1, const vector<string>& tok2);
 
 #endif

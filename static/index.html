@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CodePlag Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      height: 60px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    main {
+      display: flex;
+      height: calc(100vh - 60px);
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+
+    input[type="number"] {
+      width: 70px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #analyzeBtn {
+      background: #3b82f6;
+      color: white;
+      margin-left: auto;
+    }
+
+    #analyzeBtn:hover { background: #2563eb; }
+    #analyzeBtn:disabled { background: #475569; cursor: not-allowed; }
+
+    #clearBtn {
+      background: #475569;
+      color: #e2e8f0;
+    }
+
+    #clearBtn:hover { background: #64748b; }
+
+    .editors {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .editor-panel {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .editor-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .token-count {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .CodeMirror {
+      height: 100% !important;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      font-size: 13px;
+    }
+
+    .right {
+      width: 380px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .result-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .score-display {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .score-label {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .score-value {
+      font-size: 48px;
+      font-weight: 700;
+      margin: 8px 0;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .metric-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .status {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      color: #cbd5e1;
+      text-align: center;
+    }
+
+    .status.error { border-color: #ef4444; color: #fca5a5; }
+    .status.success { border-color: #10b981; color: #6ee7b7; }
+    .status.loading { border-color: #3b82f6; color: #93c5fd; }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #475569;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🧠 CodePlag Analyzer</h1>
+  </header>
+
+  <main>
+    <div class="left">
+      <div class="controls">
+        <div class="control-group">
+          <label>Window:</label>
+          <input type="number" id="windowInput" value="4" min="1" max="20">
+        </div>
+        <button id="analyzeBtn">Analyze Similarity</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+
+      <div class="editors">
+        <div class="editor-panel">
+          <div class="editor-header">
+            <h3>Code A</h3>
+            <span class="token-count" id="tokensA">Tokens: —</span>
+          </div>
+          <textarea id="codeA"></textarea>
+        </div>
+
+        <div class="editor-panel">
+          <div class="editor-header">
+            <h3>Code B</h3>
+            <span class="token-count" id="tokensB">Tokens: —</span>
+          </div>
+          <textarea id="codeB"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <h2 class="result-title">Analysis Results</h2>
+      
+      <div class="score-display">
+        <div class="score-label">Final Score</div>
+        <div class="score-value" id="finalScore">—</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card">
+          <div class="metric-label">Jaccard</div>
+          <div class="metric-value" id="jaccardValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Edit Similarity</div>
+          <div class="metric-value" id="editValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">AST Structural</div>
+          <div class="metric-value" id="astValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">PDG Similarity</div>
+          <div class="metric-value" id="pdgValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Majority Score</div>
+          <div class="metric-value" id="majorityValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Minority Score</div>
+          <div class="metric-value" id="minorityValue">—</div>
+        </div>
+      </div>
+
+      <div class="status" id="statusMsg">Ready to analyze</div>
+    </div>
+  </main>
+
+  <script>
+    // Initialize CodeMirror editors
+    const editorA = CodeMirror.fromTextArea(document.getElementById('codeA'), {
+      mode: 'text/x-c++src',
+      theme: 'default',
+      lineNumbers: true,
+      lineWrapping: true
+    });
+
+    const editorB = CodeMirror.fromTextArea(document.getElementById('codeB'), {
+      mode: 'text/x-c++src',
+      theme: 'default',
+      lineNumbers: true,
+      lineWrapping: true
+    });
+
+    // DOM elements
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const windowInput = document.getElementById('windowInput');
+    const statusMsg = document.getElementById('statusMsg');
+
+    // Result elements
+    const finalScore = document.getElementById('finalScore');
+    const progressFill = document.getElementById('progressFill');
+    const tokensA = document.getElementById('tokensA');
+    const tokensB = document.getElementById('tokensB');
+    const jaccardValue = document.getElementById('jaccardValue');
+    const editValue = document.getElementById('editValue');
+    const astValue = document.getElementById('astValue');
+    const pdgValue = document.getElementById('pdgValue');
+    const majorityValue = document.getElementById('majorityValue');
+    const minorityValue = document.getElementById('minorityValue');
+
+    // Sample code for testing
+    const sampleCodeA = `int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}`;
+
+    const sampleCodeB = `int fact(int num) {
+    if (num <= 1) return 1;
+    return num * fact(num - 1);
+}`;
+
+    editorA.setValue(sampleCodeA);
+    editorB.setValue(sampleCodeB);
+
+    // Analyze button handler
+    analyzeBtn.addEventListener('click', async () => {
+      const codeA = editorA.getValue().trim();
+      const codeB = editorB.getValue().trim();
+
+      if (!codeA || !codeB) {
+        setStatus('Please enter code in both editors', 'error');
+        return;
+      }
+
+      analyzeBtn.disabled = true;
+      setStatus('<span class="loading-spinner"></span>Analyzing code...', 'loading');
+
+      try {
+        // Prepare the JSON payload for Flask backend
+        const window = parseInt(windowInput.value);
+        
+        const response = await fetch('/compare', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            codeA: codeA,
+            codeB: codeB,
+            window: window
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        let result;
+        const text = await response.text();
+        
+        try {
+          // Try to parse JSON directly
+          result = JSON.parse(text);
+        } catch (e) {
+          // Fix common JSON formatting issues from C++ backend
+          const fixed = text
+            .replace(/\n\s*"FinalScore"/, ',\n  "FinalScore"')  // Add missing comma
+            .replace(/,(\s*[}\]])/g, '$1');  // Remove trailing commas
+          
+          try {
+            result = JSON.parse(fixed);
+          } catch (e2) {
+            console.error('Raw response:', text);
+            throw new Error('Invalid JSON from server');
+          }
+        }
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        displayResults(result);
+        setStatus('Analysis complete!', 'success');
+      } catch (error) {
+        console.error('Analysis error:', error);
+        setStatus(`Error: ${error.message}`, 'error');
+      } finally {
+        analyzeBtn.disabled = false;
+      }
+    });
+
+    // Clear button handler
+    clearBtn.addEventListener('click', () => {
+      editorA.setValue('');
+      editorB.setValue('');
+      resetResults();
+      setStatus('Ready to analyze', '');
+    });
+
+    // Display results
+    function displayResults(data) {
+      tokensA.textContent = `Tokens: ${data.tokensA || '—'}`;
+      tokensB.textContent = `Tokens: ${data.tokensB || '—'}`;
+      
+      jaccardValue.textContent = formatScore(data.jaccard);
+      editValue.textContent = formatScore(data.editSimilarity);
+      astValue.textContent = formatScore(data.astStructural);
+      pdgValue.textContent = formatScore(data.pdgSimilarity);
+      majorityValue.textContent = formatScore(data.majorityScore);
+      minorityValue.textContent = formatScore(data.minorityScore);
+      
+      const score = data.FinalScore || 0;
+      finalScore.textContent = formatScore(score);
+      progressFill.style.width = `${score * 100}%`;
+    }
+
+    // Format score
+    function formatScore(value) {
+      if (value === undefined || value === null) return '—';
+      return (value * 100).toFixed(2) + '%';
+    }
+
+    // Reset results
+    function resetResults() {
+      tokensA.textContent = 'Tokens: —';
+      tokensB.textContent = 'Tokens: —';
+      finalScore.textContent = '—';
+      progressFill.style.width = '0%';
+      jaccardValue.textContent = '—';
+      editValue.textContent = '—';
+      astValue.textContent = '—';
+      pdgValue.textContent = '—';
+      majorityValue.textContent = '—';
+      minorityValue.textContent = '—';
+    }
+
+    // Set status message
+    function setStatus(msg, type) {
+      statusMsg.innerHTML = msg;
+      statusMsg.className = 'status ' + type;
+    }
+  </script>
+</body>
+</html>

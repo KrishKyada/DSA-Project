@@ -1,194 +1,319 @@
-#include "plagiarism_core.h"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
+#include <cmath>
+#include <cctype>
 
-static const uint64_t MOD  = 1000000007ULL;
-static const uint64_t BASE = 911382323ULL;
+using namespace std;
 
-// ---------------- Normalize (strip comments, compress spaces) ----------------
-string normalizeStrip(const string &s) {
-    string out; out.reserve(s.size());
-    bool in_sl = false, in_ml = false;
-
-    for (size_t i = 0; i < s.size(); ++i) {
-        if (!in_sl && !in_ml && i + 1 < s.size() && s[i] == '/' && s[i+1] == '/') { in_sl = true; ++i; continue; }
-        if (!in_sl && !in_ml && i + 1 < s.size() && s[i] == '/' && s[i+1] == '*') { in_ml = true; ++i; continue; }
-        if (in_sl && s[i] == '\n') { in_sl = false; out.push_back('\n'); continue; }
-        if (in_ml && i + 1 < s.size() && s[i] == '*' && s[i+1] == '/') { in_ml = false; ++i; continue; }
-        if (in_sl || in_ml) continue;
-
-        unsigned char ch = static_cast<unsigned char>(s[i]);
-        if (isspace(ch)) {
-            if (!out.empty() && out.back() != ' ') out.push_back(' ');
+// ============================================================================
+// 1. TEXT NORMALIZATION
+// ============================================================================
+string normalize(const string& code) {
+    string result;
+    result.reserve(code.size());
+    bool in_line_comment = false;
+    bool in_block_comment = false;
+    
+    for (size_t i = 0; i < code.size(); i++) {
+        if (!in_line_comment && !in_block_comment && i + 1 < code.size()) {
+            if (code[i] == '/' && code[i+1] == '/') {
+                in_line_comment = true;
+                i++;
+                continue;
+            }
+            if (code[i] == '/' && code[i+1] == '*') {
+                in_block_comment = true;
+                i++;
+                continue;
+            }
+        }
+        
+        if (in_line_comment && code[i] == '\n') {
+            in_line_comment = false;
+            result += ' ';
+            continue;
+        }
+        
+        if (in_block_comment && i + 1 < code.size() && code[i] == '*' && code[i+1] == '/') {
+            in_block_comment = false;
+            i++;
+            continue;
+        }
+        
+        if (in_line_comment || in_block_comment) continue;
+        
+        if (isspace(code[i])) {
+            if (!result.empty() && result.back() != ' ') {
+                result += ' ';
+            }
         } else {
-            out.push_back((char)ch);
+            result += code[i];
         }
     }
-    if (!out.empty() && out.front() == ' ') out.erase(out.begin());
-    if (!out.empty() && out.back() == ' ') out.pop_back();
-    return out;
+    
+    while (!result.empty() && result.back() == ' ') result.pop_back();
+    while (!result.empty() && result.front() == ' ') result.erase(0, 1);
+    
+    return result;
 }
 
-// ---------------- Tokenize (ident/num/underscore vs single-char ops) ---------
-vector<string> tokenize(const string &code) {
+// ============================================================================
+// 2. TOKENIZATION
+// ============================================================================
+vector<string> tokenize(const string& code) {
     vector<string> tokens;
-    string cur;
-    for (unsigned char c : code) {
+    string current;
+    
+    for (char c : code) {
         if (isalnum(c) || c == '_') {
-            cur.push_back((char)c);
+            current += c;
         } else {
-            if (!cur.empty()) { tokens.push_back(cur); cur.clear(); }
-            if (!isspace(c)) tokens.push_back(string(1, (char)c));
+            if (!current.empty()) {
+                tokens.push_back(current);
+                current.clear();
+            }
+            if (!isspace(c)) {
+                tokens.push_back(string(1, c));
+            }
         }
     }
-    if (!cur.empty()) tokens.push_back(cur);
+    
+    if (!current.empty()) {
+        tokens.push_back(current);
+    }
+    
     return tokens;
 }
 
-// ---------------- Fingerprints via rolling hash + winnowing ------------------
-vector<uint64_t> fingerprintTokens(const vector<string> &tokens, int window) {
+// ============================================================================
+// 3. ROLLING HASH FINGERPRINTS (Winnowing)
+// ============================================================================
+vector<uint64_t> computeFingerprints(const vector<string>& tokens, int window_size) {
+    if (tokens.empty() || window_size <= 0) return {};
+    
+    const uint64_t BASE = 911382323ULL;
+    const uint64_t MOD = 1000000007ULL;
+    
     vector<uint64_t> hashes;
-    if (tokens.empty() || window <= 0) return hashes;
-
-    // Map tokens to integer ids (stable vocabulary in this run)
-    unordered_map<string,int> id;
-    id.reserve(tokens.size()*2);
-    vector<int> ids; ids.reserve(tokens.size());
-    int nxt = 1;
-    for (auto &t : tokens) {
-        auto it = id.find(t);
-        if (it == id.end()) it = id.emplace(t, nxt++).first;
-        ids.push_back(it->second);
-    }
-
-    // Rolling hash of k=1 token (simple and fast)
-    vector<uint64_t> roll(ids.size());
-    uint64_t h = 0;
-    for (size_t i = 0; i < ids.size(); ++i) {
-        h = (h * BASE + (uint64_t)ids[i]) % MOD;
-        roll[i] = h;
-    }
-
-    if ((int)roll.size() < window) return {};
-
-    // Winnowing: min hash per sliding window (classic monotonic queue)
-    deque<pair<uint64_t,int>> dq;
-    for (int i = 0; i < (int)roll.size(); ++i) {
-        while (!dq.empty() && dq.back().first >= roll[i]) dq.pop_back();
-        dq.emplace_back(roll[i], i);
-
-        int L = i - window + 1;
-        if (L >= 0) {
-            while (!dq.empty() && dq.front().second < L) dq.pop_front();
-            hashes.push_back(dq.front().first);
+    vector<uint64_t> rolling_hashes;
+    
+    for (size_t i = 0; i < tokens.size(); i++) {
+        uint64_t hash_val = 0;
+        for (char c : tokens[i]) {
+            hash_val = (hash_val * BASE + (uint64_t)c) % MOD;
         }
+        rolling_hashes.push_back(hash_val);
     }
+    
+    if ((int)rolling_hashes.size() < window_size) return hashes;
+    
+    for (size_t i = 0; i + window_size <= rolling_hashes.size(); i++) {
+        uint64_t min_hash = rolling_hashes[i];
+        for (int j = 1; j < window_size; j++) {
+            min_hash = min(min_hash, rolling_hashes[i + j]);
+        }
+        hashes.push_back(min_hash);
+    }
+    
     return hashes;
 }
 
-// ---------------- Jaccard over fingerprint sets ------------------------------
-double jaccardFingerprint(const vector<uint64_t> &a, const vector<uint64_t> &b) {
-    if (a.empty() && b.empty()) return 1.0; // both empty -> identical
-    unordered_set<uint64_t> A(a.begin(), a.end()), B(b.begin(), b.end());
-    size_t inter = 0;
-    for (auto &x : A) if (B.count(x)) ++inter;
-    size_t uni = A.size() + B.size() - inter;
-    if (uni == 0) return 0.0;
-    return (double)inter / (double)uni;
+// ============================================================================
+// 4. JACCARD SIMILARITY
+// ============================================================================
+double jaccardSimilarity(const vector<uint64_t>& fp1, const vector<uint64_t>& fp2) {
+    if (fp1.empty() && fp2.empty()) return 1.0;
+    if (fp1.empty() || fp2.empty()) return 0.0;
+    
+    unordered_set<uint64_t> set1(fp1.begin(), fp1.end());
+    unordered_set<uint64_t> set2(fp2.begin(), fp2.end());
+    
+    size_t intersection = 0;
+    for (uint64_t val : set1) {
+        if (set2.count(val)) intersection++;
+    }
+    
+    size_t union_size = set1.size() + set2.size() - intersection;
+    return union_size > 0 ? (double)intersection / union_size : 0.0;
 }
 
-// ---------------- High-level pair analysis -----------------------------------
-AnalyzeResult analyzePair(const string& codeAraw, const string& codeBraw, int window) {
-    AnalyzeResult R;
-
-    string A = normalizeStrip(codeAraw);
-    string B = normalizeStrip(codeBraw);
-
-    auto tokA = tokenize(A);
-    auto tokB = tokenize(B);
-
-    R.tokensA = (int)tokA.size();
-    R.tokensB = (int)tokB.size();
-
-    auto fpA = fingerprintTokens(tokA, window);
-    auto fpB = fingerprintTokens(tokB, window);
-
-    R.fpsA = (int)fpA.size();
-    R.fpsB = (int)fpB.size();
-    R.jaccard = jaccardFingerprint(fpA, fpB);
-
-    ostringstream oss;
-    oss << "tokensA=" << R.tokensA << ", tokensB=" << R.tokensB
-        << ", fpsA=" << R.fpsA << ", fpsB=" << R.fpsB;
-    R.message = oss.str();
-    return R;
+// ============================================================================
+// 5. EDIT DISTANCE (Levenshtein)
+// ============================================================================
+double editSimilarity(const vector<string>& tok1, const vector<string>& tok2) {
+    int n = tok1.size();
+    int m = tok2.size();
+    
+    if (n == 0 && m == 0) return 1.0;
+    if (n == 0 || m == 0) return 0.0;
+    
+    vector<int> prev(m + 1);
+    vector<int> curr(m + 1);
+    
+    for (int j = 0; j <= m; j++) prev[j] = j;
+    
+    for (int i = 1; i <= n; i++) {
+        curr[0] = i;
+        for (int j = 1; j <= m; j++) {
+            if (tok1[i-1] == tok2[j-1]) {
+                curr[j] = prev[j-1];
+            } else {
+                curr[j] = 1 + min({prev[j], curr[j-1], prev[j-1]});
+            }
+        }
+        swap(prev, curr);
+    }
+    
+    int distance = prev[m];
+    int max_len = max(n, m);
+    return 1.0 - (double)distance / max_len;
 }
 
-// =============================================================================
-// CLI MAIN — robust, non-interactive protocol (NO prompts, NO tildes)
-// Protocol (stdin):
-//   Line 1: "LENA <number>\n"
-//   Line 2: "LENB <number>\n"
-//   Then:   <number> raw bytes for A, followed by <number> raw bytes for B.
-// Optional env WINDOW sets winnowing window (default 4).
-// Output: single JSON line with fields: jaccard, tokensA, tokensB, fpsA, fpsB, message
-// =============================================================================
-static string readExact(istream& in, size_t n) {
-    string s; s.resize(n);
-    in.read(&s[0], (std::streamsize)n);
-    if ((size_t)in.gcount() != n) s.resize((size_t)in.gcount());
-    return s;
+// ============================================================================
+// 6. AST STRUCTURAL SIMILARITY (Simplified)
+// ============================================================================
+double astStructuralSimilarity(const vector<string>& tok1, const vector<string>& tok2) {
+    unordered_map<string, int> struct1, struct2;
+    
+    for (const string& t : tok1) {
+        if (t == "{" || t == "}" || t == "(" || t == ")" || 
+            t == "[" || t == "]" || t == ";" || t == "for" || 
+            t == "while" || t == "if" || t == "else") {
+            struct1[t]++;
+        }
+    }
+    
+    for (const string& t : tok2) {
+        if (t == "{" || t == "}" || t == "(" || t == ")" || 
+            t == "[" || t == "]" || t == ";" || t == "for" || 
+            t == "while" || t == "if" || t == "else") {
+            struct2[t]++;
+        }
+    }
+    
+    if (struct1.empty() && struct2.empty()) return 1.0;
+    if (struct1.empty() || struct2.empty()) return 0.0;
+    
+    int common = 0, total = 0;
+    unordered_set<string> all_keys;
+    for (auto& p : struct1) all_keys.insert(p.first);
+    for (auto& p : struct2) all_keys.insert(p.first);
+    
+    for (const string& key : all_keys) {
+        int c1 = struct1[key];
+        int c2 = struct2[key];
+        common += min(c1, c2);
+        total += max(c1, c2);
+    }
+    
+    return total > 0 ? (double)common / total : 0.0;
 }
 
+// ============================================================================
+// 7. PDG (Program Dependence Graph) - Simplified Control Flow
+// ============================================================================
+double pdgSimilarity(const vector<string>& tok1, const vector<string>& tok2) {
+    auto extractControlFlow = [](const vector<string>& tokens) {
+        vector<string> flow;
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i] == "if" || tokens[i] == "for" || 
+                tokens[i] == "while" || tokens[i] == "switch" ||
+                tokens[i] == "return") {
+                flow.push_back(tokens[i]);
+            }
+        }
+        return flow;
+    };
+    
+    vector<string> flow1 = extractControlFlow(tok1);
+    vector<string> flow2 = extractControlFlow(tok2);
+    
+    if (flow1.empty() && flow2.empty()) return 1.0;
+    if (flow1.empty() || flow2.empty()) return 0.0;
+    
+    int matches = 0;
+    size_t min_size = min(flow1.size(), flow2.size());
+    for (size_t i = 0; i < min_size; i++) {
+        if (flow1[i] == flow2[i]) matches++;
+    }
+    
+    return (double)matches / max(flow1.size(), flow2.size());
+}
+
+// ============================================================================
+// MAIN ANALYSIS
+// ============================================================================
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-
-    // Parse headers
+    
     string line1, line2;
     if (!getline(cin, line1) || !getline(cin, line2)) {
-        cout << "{\"error\":\"Bad header. Expected LENA/LENB lines.\"}\n";
+        cout << "{\"error\":\"Missing input headers\"}\n";
         return 0;
     }
-
-    auto parseLen = [](const string& ln, const string& key)->long long{
-        // expects "KEY <num>"
-        size_t p = ln.find(' ');
-        if (p == string::npos) return -1;
-        string k = ln.substr(0, p);
-        if (k != key) return -1;
-        try { return stoll(ln.substr(p+1)); } catch (...) { return -1; }
-    };
-
-    long long la = parseLen(line1, "LENA");
-    long long lb = parseLen(line2, "LENB");
-    if (la < 0 || lb < 0) {
-        cout << "{\"error\":\"Malformed lengths.\"}\n";
+    
+    size_t pos1 = line1.find(' ');
+    size_t pos2 = line2.find(' ');
+    
+    if (pos1 == string::npos || pos2 == string::npos) {
+        cout << "{\"error\":\"Invalid format\"}\n";
         return 0;
     }
-
-    string A = readExact(cin, (size_t)la);
-    string B = readExact(cin, (size_t)lb);
-    if ((long long)A.size() != la || (long long)B.size() != lb) {
-        cout << "{\"error\":\"Truncated input.\"}\n";
-        return 0;
-    }
-
+    
+    int len_a = stoi(line1.substr(pos1 + 1));
+    int len_b = stoi(line2.substr(pos2 + 1));
+    
+    string code_a(len_a, '\0');
+    string code_b(len_b, '\0');
+    
+    cin.read(&code_a[0], len_a);
+    cin.read(&code_b[0], len_b);
+    
     int window = 4;
-    if (const char* wenv = getenv("WINDOW")) {
-        try { window = max(1, stoi(wenv)); } catch (...) {}
+    if (const char* env = getenv("WINDOW")) {
+        window = max(1, stoi(env));
     }
+    
+    string norm_a = normalize(code_a);
+    string norm_b = normalize(code_b);
+    
+    vector<string> tokens_a = tokenize(norm_a);
+    vector<string> tokens_b = tokenize(norm_b);
+    
+    vector<uint64_t> fp_a = computeFingerprints(tokens_a, window);
+    vector<uint64_t> fp_b = computeFingerprints(tokens_b, window);
+    
+    double jaccard = jaccardSimilarity(fp_a, fp_b);
+    double edit_sim = editSimilarity(tokens_a, tokens_b);
+    double ast_sim = astStructuralSimilarity(tokens_a, tokens_b);
+    double pdg_sim = pdgSimilarity(tokens_a, tokens_b);
+    
+    double majority_score = max({jaccard , edit_sim , ast_sim , pdg_sim});
+    double minority_score = min({jaccard, edit_sim, ast_sim, pdg_sim});
 
-    auto R = analyzePair(A, B, window);
-
-    auto safe = [](double x) { return std::isfinite(x) ? x : 0.0; };
-
-    cout.setf(std::ios::fixed); cout << setprecision(6);
-    cout << "{"
-         << "\"jaccard\":" << safe(R.jaccard)
-         << ",\"tokensA\":" << R.tokensA
-         << ",\"tokensB\":" << R.tokensB
-         << ",\"fpsA\":" << R.fpsA
-         << ",\"fpsB\":" << R.fpsB
-         << ",\"message\":\"" << R.message << "\""
-         << "}\n";
+    double final_score = (jaccard + edit_sim + ast_sim + pdg_sim)/4.0;
+    
+    cout << fixed << setprecision(4);
+    cout << "{\n";
+    cout << "  \"tokensA\": " << tokens_a.size() << ",\n";
+    cout << "  \"tokensB\": " << tokens_b.size() << ",\n";
+    cout << "  \"fingerprintsA\": " << fp_a.size() << ",\n";
+    cout << "  \"fingerprintsB\": " << fp_b.size() << ",\n";
+    cout << "  \"jaccard\": " << jaccard << ",\n";
+    cout << "  \"editSimilarity\": " << edit_sim << ",\n";
+    cout << "  \"astStructural\": " << ast_sim << ",\n";
+    cout << "  \"pdgSimilarity\": " << pdg_sim << ",\n";
+    cout << "  \"majorityScore\": " << majority_score << ",\n";
+    cout << "  \"minorityScore\": " << minority_score << "\n";
+    cout << "  \"FinalScore\": " << final_score << "\n";
+    cout << "}\n";
+    
     return 0;
 }
