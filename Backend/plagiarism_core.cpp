@@ -304,21 +304,26 @@ double pdgSimilarity(const vector<string> &tok1, const vector<string> &tok2)
 {
     auto extractControlFlow = [](const vector<string> &tokens)
     {
-        vector<string> flow;
+        vector<pair<string, int>> flow;
+        int depth = 0;  // <-- ADDED
+
         for (size_t i = 0; i < tokens.size(); i++)
         {
+            if (tokens[i] == "{") depth++;              // <-- ADDED
+            if (tokens[i] == "}") depth = max(0, depth - 1); // <-- ADDED
+
             if (tokens[i] == "if" || tokens[i] == "for" ||
                 tokens[i] == "while" || tokens[i] == "switch" ||
                 tokens[i] == "return")
             {
-                flow.push_back(tokens[i]);
+                flow.push_back({tokens[i], depth});  // <-- FIXED
             }
         }
         return flow;
     };
 
-    vector<string> flow1 = extractControlFlow(tok1);
-    vector<string> flow2 = extractControlFlow(tok2);
+    vector<pair<string, int>> flow1 = extractControlFlow(tok1);
+    vector<pair<string, int>> flow2 = extractControlFlow(tok2);
 
     if (flow1.empty() && flow2.empty())
         return 1.0;
@@ -329,12 +334,15 @@ double pdgSimilarity(const vector<string> &tok1, const vector<string> &tok2)
     size_t min_size = min(flow1.size(), flow2.size());
     for (size_t i = 0; i < min_size; i++)
     {
-        if (flow1[i] == flow2[i])
+        if (flow1[i].first == flow2[i].first &&   // <-- CHANGED
+            abs(flow1[i].second - flow2[i].second) <= 1)
+        {
             matches++;
+        }
     }
-
     return (double)matches / max(flow1.size(), flow2.size());
 }
+
 
 // ============================================================================
 // MAIN ANALYSIS
