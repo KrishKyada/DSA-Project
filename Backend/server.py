@@ -6,7 +6,8 @@ app = Flask(__name__, static_folder="../Frontend", static_url_path="")
 CORS(app)
 
 # Path to binary
-BINARY_PATH = "./plagiarism_core.exe"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BINARY_PATH = os.path.join(SCRIPT_DIR, "plagiarism_core")
 
 @app.route("/")
 def index():
