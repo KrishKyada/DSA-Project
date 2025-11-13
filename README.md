@@ -1,31 +1,32 @@
-# 🌐 Social Graph Friend Recommender (DSA Project)
+# 🕵️‍♂️ Plagiarism Checker (DSA Project)
 
-A compact full-stack project that demonstrates graph algorithms, prefix search and friend recommendations with a small web UI. The project combines a C++ core for graph operations and a simple server layer alongside a lightweight frontend.
+A compact demo that uses a native C++ core to compare two code/text blobs for similarity and a minimal Flask web UI to run comparisons. The Python server forwards requests to the compiled C++ binary and returns the results.
 
-Live demo (local): start the server and open the frontend in your browser.
+Live demo (local): compile the C++ core, run the server, then open the frontend in your browser.
 
 ---
 
 ## 📋 Quick overview
 
-- Backend core: C++ implementation (plagiarism_core.*) that contains graph/search algorithms and utilities.
-- Server: `Backend/server.py` — provides a bridge between HTTP requests and the compiled C++ binary (or executes the C++ program in silent/CLI mode).
-- Frontend: `Frontend/index.html` — simple web UI to interact with the server.
+- Backend core: C++ implementation (`plagiarism_core.*`) that performs code/text comparison.
+- Server: `Backend/server.py` — Flask bridge that accepts requests and invokes the compiled C++ binary.
+- Frontend: `Frontend/index.html` — minimal UI to submit two code snippets and view results.
 
-This README adapts the full template to the actual files in this repository.
+This README describes how to compile, run, and use the plagiarism checker with the files present in this repo.
 
 ---
 
 ## 📁 Project structure
 
 ```
-/home/elarion/Desktop/DSA-Project/
+DSA-Project/
 ├── Backend/
 │   ├── plagiarism_core.cpp
 │   ├── plagiarism_core.h
+│   ├── plagiarism_core        # compiled binary (optional)
 │   └── server.py
 └── Frontend/
-    └── index.html
+   └── index.html
 ```
 
 > Note: If you have additional frontend assets (CSS/JS) they should live under `Frontend/` alongside `index.html`.
@@ -34,60 +35,62 @@ This README adapts the full template to the actual files in this repository.
 
 ## 🛠️ Tech stack
 
-- Backend core: C++ (graph algorithms, trie, PageRank style scoring)
-- Server layer: Python (the provided `server.py` maps HTTP requests to backend operations)
-- Frontend: HTML (vanilla JS in `index.html`)
-- Data persistence: CSV files (if present/used by the backend)
+- Backend core: C++ (plagiarism/comparison logic)
+- Server layer: Python 3 + Flask (simple HTTP bridge)
+- Frontend: HTML + vanilla JavaScript
+- Data / I/O: binary stdin/stdout communication between server and C++ core
 
 ---
+
 
 ## 🚀 Quick start (Linux)
 
-1. Build the C++ backend
+1. Compile the C++ core
 
-   Use the provided `Makefile` to build the backend binary. From the `Backend/` folder run:
-
-   ```bash
-   cd /home/elarion/Desktop/DSA-Project/Backend
-   make
-   ```
-
-   The Makefile compiles `plagiarism_core.cpp` and produces the binary `plagiarism_core` in `Backend/`.
-
-   If you prefer to compile manually with g++, you can run:
+   Compile the C++ source into a binary named `plagiarism_core` placed in `Backend/`:
 
    ```bash
+   cd Backend
    g++ -std=c++23 -O2 plagiarism_core.cpp -o plagiarism_core
+   chmod +x plagiarism_core
    ```
 
-2. Start the server
+2. Install Python dependencies
 
-   The repository includes `Backend/server.py`. Run it with Python 3:
+   Create a virtual environment and install Flask (recommended):
 
    ```bash
-   cd /home/elarion/Desktop/DSA-Project/Backend
+   cd Backend
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install --upgrade pip
+   pip install flask flask-cors
+   ```
+
+3. Start the Flask server
+
+   ```bash
+   cd Backend
    python3 server.py
    ```
 
-   The server should expose HTTP endpoints (see Server details below). `server.py` expects the backend binary to be named `plagiarism_core` and located in the same `Backend/` folder (the script builds `BINARY_PATH` as `os.path.join(SCRIPT_DIR, "plagiarism_core")`).
+   By default the server runs on `127.0.0.1:5000` and serves `Frontend/index.html`.
 
-3. Open the frontend
+4. Open the frontend
 
-   - Option A (recommended): Serve the frontend directory and open in browser (avoids file:// issues):
+   Open your browser to:
 
-     ```bash
-     cd /home/elarion/Desktop/DSA-Project/Frontend
-     python3 -m http.server 5000
-     # then open http://localhost:5000 in your browser
-     ```
+   ```
+   http://127.0.0.1:5000/
+   ```
 
-   - Option B: Open `Frontend/index.html` directly in the browser (some fetch requests may be blocked by CORS/file:// restrictions).
+   Note: If you prefer to serve the frontend separately, you can run a static server in the `Frontend/` folder (for example, `python3 -m http.server 5000`) and open the served page.
 
 ---
 
-## 🔌 Server details (actual)
+## 🔌 Server details
 
-The provided `Backend/server.py` is a small Flask app that serves the frontend and forwards a specific operation to the compiled C++ binary. Key details discovered from the script:
+`Backend/server.py` is a small Flask app that serves the frontend and forwards compare requests to the compiled C++ core.
 
 - Static frontend directory: `../Frontend` (served at `/`) — visiting `/` returns `index.html`.
 - Binary path (built-in): `os.path.join(SCRIPT_DIR, "plagiarism_core")` — the binary should be named `plagiarism_core` and placed in the `Backend/` directory.
@@ -97,18 +100,18 @@ Endpoint implemented by `server.py`:
 - `POST /compare`
    - Expects a JSON body: `{ "codeA": "...", "codeB": "...", "window": <int> }`
    - `codeA` and `codeB` are the two source texts to compare (strings).
-   - `window` is optional (the script sets `WINDOW` environment variable when invoking the binary). Default used in the server is `4` if not provided.
-   - The server builds a custom byte stream for the binary: a header with lengths, then the two code blobs. It runs the binary with `WINDOW` in the environment and returns the binary's stdout as the response with `application/json` mimetype.
+   - `window` is optional and passed to the binary via the `WINDOW` environment variable.
+   - The server builds a byte stream (header + code blobs) and runs the binary, returning its stdout as the HTTP response.
 
 Static file serving:
 
 - `GET /` → serves `Frontend/index.html`
 - `GET /<filename>` → serves static file from `Frontend/` (e.g., CSS or JS if present)
 
-Example cURL for the actual endpoint:
+Example cURL:
 
 ```bash
-curl -X POST http://localhost:5000/compare \
+curl -X POST http://127.0.0.1:5000/compare \
    -H "Content-Type: application/json" \
    -d '{"codeA":"print(1)","codeB":"print(2)","window":4}'
 ```
@@ -119,8 +122,11 @@ Note: `server.py` runs Flask in debug mode by default which listens on `127.0.0.
 
 ## 📖 Usage guide (UI)
 
-- Use the frontend controls to add users, create friendships, search, and request recommendations.
-- The frontend issues requests to the server; check the server console for incoming requests and the backend logs for processing output.
+- Open the UI and paste or type the two code snippets you want to compare.
+- Click the action button (Compare / Submit) to send both snippets to the server.
+- The server will return the C++ core's output (similarity/metrics) and the UI will display it.
+
+Check the Flask server console for incoming requests and for any stderr from the binary.
 
 ---
 
@@ -149,10 +155,9 @@ DATA_CSV = './dataset/users.csv'
 
 ## 🎓 Learning outcomes
 
-- Graph algorithms (adjacency lists, BFS)
-- Local PageRank-like scoring and recommendation heuristics
-- Trie/prefix search for autocomplete
-- Simple full-stack integration between compiled code and a web UI via a lightweight server
+- Native-code integration: calling a compiled C++ program from a Python server
+- Text similarity and plagiarism detection heuristics (sliding-window comparisons, matching substrings)
+- Building a minimal full-stack demo with a static frontend, server bridge, and native core
 
 ---
 
@@ -164,8 +169,8 @@ MIT License — feel free to reuse and modify for coursework.
 
 If you want, I can also:
 
-1. Inspect `Backend/server.py` and adapt README instructions to its exact routes and expected binary/CSV paths.
-2. Add a minimal `Makefile` or a build script for the C++ binary.
-3. Serve the frontend automatically from the server (merge server + static file serving).
+1. Make `server.py` accept a configurable `BINARY_PATH` env var (so the binary can live elsewhere).
+2. Produce a tiny test script to exercise `/compare` and validate end-to-end behavior.
+3. Add a short note in `README.md` explaining how to run the server on a different port.
 
 Tell me which of those you'd like next.
