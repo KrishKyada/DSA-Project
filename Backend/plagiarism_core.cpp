@@ -12,8 +12,7 @@
 
 using namespace std;
 // Result struct for pairwise comparison
-struct AnalyzeResult
-{
+struct AnalyzeResult {
     int tokensA;
     int tokensB;
     int fpsA;
@@ -212,28 +211,28 @@ AnalyzeResult analyzePair(const string &codeAraw, const string &codeBraw, int wi
 }
 
 // ============================================================================
-// 5. EDIT DISTANCE (Levenshtein)
+// 5. EDIT DISTANCE (Levenshtein) - REPLACEMENT
 // ============================================================================
 double editSimilarity(const vector<string> &tok1, const vector<string> &tok2)
 {
-    int n = tok1.size();
-    int m = tok2.size();
+    int n = (int)tok1.size();
+    int m = (int)tok2.size();
 
     if (n == 0 && m == 0)
         return 1.0;
     if (n == 0 || m == 0)
         return 0.0;
 
-    vector<int> prev(m + 1);
-    vector<int> curr(m + 1);
+    // Use two rolling rows to save memory
+    vector<int> prev(m + 1), curr(m + 1);
 
-    for (int j = 0; j <= m; j++)
+    for (int j = 0; j <= m; ++j)
         prev[j] = j;
 
-    for (int i = 1; i <= n; i++)
+    for (int i = 1; i <= n; ++i)
     {
         curr[0] = i;
-        for (int j = 1; j <= m; j++)
+        for (int j = 1; j <= m; ++j)
         {
             if (tok1[i - 1] == tok2[j - 1])
             {
@@ -241,56 +240,52 @@ double editSimilarity(const vector<string> &tok1, const vector<string> &tok2)
             }
             else
             {
-                curr[j] = 1 + min({prev[j], curr[j - 1], prev[j - 1]});
+                curr[j] = 1 + min({ prev[j], curr[j - 1], prev[j - 1] });
             }
         }
-        swap(prev, curr);
+        prev.swap(curr);
     }
 
     int distance = prev[m];
-    int max_len = max(n, m);
-    return 1.0 - (double)distance / max_len;
+    int longer = max(n, m);
+    return 1.0 - (double)distance / (double)longer;
 }
 
 // ============================================================================
-// 6. AST STRUCTURAL SIMILARITY (Simplified)
+// 6. AST STRUCTURAL SIMILARITY (Simplified) - REPLACEMENT
 // ============================================================================
 double astStructuralSimilarity(const vector<string> &tok1, const vector<string> &tok2)
 {
+    // Broader set of structural tokens/operators that matter for structure
+    static const unordered_set<string> ast_symbols = {
+        "{", "}", "(", ")", "[", "]", ";",
+        "if", "else", "for", "while", "switch", "case", "default",
+        "return",
+        "+", "-", "*", "/", "%", "++", "--",
+        "=", "==", "!=", "<", ">", "<=", ">=",
+        "&&", "||", "?", ":", ","
+    };
+
     unordered_map<string, int> struct1, struct2;
 
     for (const string &t : tok1)
     {
-        if (t == "{" || t == "}" || t == "(" || t == ")" ||
-            t == "[" || t == "]" || t == ";" || t == "for" ||
-            t == "while" || t == "if" || t == "else")
-        {
-            struct1[t]++;
-        }
+        if (ast_symbols.count(t)) struct1[t]++;
     }
-
     for (const string &t : tok2)
     {
-        if (t == "{" || t == "}" || t == "(" || t == ")" ||
-            t == "[" || t == "]" || t == ";" || t == "for" ||
-            t == "while" || t == "if" || t == "else")
-        {
-            struct2[t]++;
-        }
+        if (ast_symbols.count(t)) struct2[t]++;
     }
 
-    if (struct1.empty() && struct2.empty())
-        return 1.0;
-    if (struct1.empty() || struct2.empty())
-        return 0.0;
+    if (struct1.empty() && struct2.empty()) return 1.0;
+    if (struct1.empty() || struct2.empty()) return 0.0;
+
+    // union of keys
+    unordered_set<string> all_keys;
+    for (auto &p : struct1) all_keys.insert(p.first);
+    for (auto &p : struct2) all_keys.insert(p.first);
 
     int common = 0, total = 0;
-    unordered_set<string> all_keys;
-    for (auto &p : struct1)
-        all_keys.insert(p.first);
-    for (auto &p : struct2)
-        all_keys.insert(p.first);
-
     for (const string &key : all_keys)
     {
         int c1 = struct1[key];
@@ -299,7 +294,7 @@ double astStructuralSimilarity(const vector<string> &tok1, const vector<string> 
         total += max(c1, c2);
     }
 
-    return total > 0 ? (double)common / total : 0.0;
+    return total > 0 ? (double)common / (double)total : 0.0;
 }
 
 // ============================================================================
@@ -410,7 +405,7 @@ int main()
     cout << "  \"astStructural\": " << ast_sim << ",\n";
     cout << "  \"pdgSimilarity\": " << pdg_sim << ",\n";
     cout << "  \"majorityScore\": " << majority_score << ",\n";
-    cout << "  \"minorityScore\": " << minority_score << "\n";
+    cout << "  \"minorityScore\": " << minority_score << ",\n";
     cout << "  \"FinalScore\": " << final_score << "\n";
     cout << "}\n";
 
