@@ -4,53 +4,21 @@
   <meta charset="utf-8" />
   <title>CodePlag Analyzer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    :root {
-      --bg-primary: #0f172a;
-      --bg-secondary: #1e293b;
-      --bg-tertiary: #0f172a;
-      --border-color: #334155;
-      --text-primary: #f1f5f9;
-      --text-secondary: #cbd5e1;
-      --text-tertiary: #94a3b8;
-      --accent-primary: #3b82f6;
-      --accent-secondary: #8b5cf6;
-      --accent-hover: #2563eb;
-      --success: #10b981;
-      --error: #ef4444;
-      --shadow: rgba(0, 0, 0, 0.3);
-    }
 
-    [data-theme="light"] {
-      --bg-primary: #f8fafc;
-      --bg-secondary: #ffffff;
-      --bg-tertiary: #f1f5f9;
-      --border-color: #e2e8f0;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --text-tertiary: #64748b;
-      --accent-primary: #3b82f6;
-      --accent-secondary: #8b5cf6;
-      --accent-hover: #2563eb;
-      --success: #10b981;
-      --error: #ef4444;
-      --shadow: rgba(0, 0, 0, 0.1);
-    }
-    
     body {
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(160deg, #0f172a 0%, #111b2f 35%, #0b1120 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .CodeMirror-cursor {
@@ -58,575 +26,375 @@
     }
 
     header {
-      height: 70px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.92);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      padding: 20px 28px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 32px;
-      box-shadow: 0 4px 6px -1px var(--shadow);
-      transition: all 0.3s ease;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .logo {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      flex-direction: column;
+      gap: 6px;
     }
 
     h1 {
-      font-size: 24px;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      font-size: 22px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+ 
+
+    .subtitle {
+      font-size: 13px;
+      color: #94a3b8;
     }
 
-    .theme-toggle {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      transition: all 0.3s ease;
-    }
-
-    .theme-toggle:hover {
-      background: var(--accent-primary);
-      color: white;
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
+    
     main {
-      display: flex;
-      height: calc(100vh - 70px);
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(320px, 1fr);
       gap: 20px;
-      padding: 20px;
+      padding: 22px 28px 32px;
     }
 
-    .left {
-      flex: 1;
+    .panel {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 18px 30px rgba(15, 23, 42, 0.35);
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    .controls {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      box-shadow: 0 4px 6px -1px var(--shadow);
-      transition: all 0.3s ease;
+    .panel-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #a5b4fc;
     }
 
-    .control-group {
+    .control-strip {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 16px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 12px;
+      padding: 12px 16px;
     }
 
     label {
-      font-size: 14px;
-      color: var(--text-secondary);
-      font-weight: 600;
+      font-size: 13px;
+      color: #cbd5f5;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     input[type="number"] {
-      width: 80px;
-      padding: 8px 12px;
+      width: 76px;
+      padding: 6px 10px;
       border-radius: 8px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      font-size: 14px;
-      transition: all 0.3s ease;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e2e8f0;
+      font-size: 13px;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
     }
 
     input[type="number"]:focus {
       outline: none;
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
     }
 
     button {
-      padding: 10px 20px;
-      border-radius: 10px;
       border: none;
-      font-size: 14px;
+      border-radius: 10px;
+      padding: 9px 18px;
+      font-size: 13px;
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
     #analyzeBtn {
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      color: white;
       margin-left: auto;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      box-shadow: 0 14px 24px rgba(59, 130, 246, 0.35);
     }
 
-    #analyzeBtn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    #analyzeBtn:hover:not(:disabled) {
+      transform: translateY(-1px);
     }
 
     #analyzeBtn:disabled {
-      background: var(--text-tertiary);
+      background: rgba(148, 163, 184, 0.35);
+      box-shadow: none;
       cursor: not-allowed;
-      transform: none;
     }
 
     #clearBtn {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.25);
     }
 
     #clearBtn:hover {
-      background: var(--error);
-      color: white;
-      border-color: var(--error);
+      border-color: #f87171;
+      color: #fca5a5;
     }
 
     .editors {
-      flex: 1;
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       min-height: 0;
     }
 
     .editor-panel {
-      flex: 1;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 16px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 6px -1px var(--shadow);
-      transition: all 0.3s ease;
-    }
-
-    .editor-panel:hover {
-      box-shadow: 0 8px 16px -1px var(--shadow);
+      gap: 10px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 14px;
     }
 
     .editor-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .editor-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .editor-header h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .editor-badge {
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      color: white;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 13px;
+      color: #a5b4cf;
     }
 
     .token-count {
+      background: rgba(59, 130, 246, 0.18);
+      color: #93c5fd;
+      padding: 4px 9px;
+      border-radius: 999px;
       font-size: 12px;
-      color: var(--text-tertiary);
-      background: var(--bg-tertiary);
-      padding: 4px 10px;
-      border-radius: 6px;
       font-weight: 600;
     }
 
     .CodeMirror {
-      height: 100% !important;
+      height: 420px;
       border-radius: 10px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-tertiary);
-      font-size: 14px;
-      font-family: 'Fira Code', 'Consolas', monospace;
-      transition: all 0.3s ease;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      background: #0b1120;
+      font-size: 13px;
+      color: #f8fafc;
+      font-family: "Fira Code", monospace;
     }
 
-    [data-theme="dark"] .CodeMirror {
-      color: #e2e8f0;
+    .CodeMirror-gutters {
+      background: #0b1120;
+      border-right: 1px solid rgba(59, 130, 246, 0.2);
     }
 
-    [data-theme="dark"] .CodeMirror-gutters {
-      background: #1e293b;
-      border-right: 1px solid #334155;
-    }
-
-    [data-theme="dark"] .CodeMirror-linenumber {
+    .CodeMirror-linenumber {
       color: #64748b;
     }
 
-    [data-theme="dark"] .cm-keyword {
-      color: #c792ea;
+    .CodeMirror-cursor {
+      border-left: 1px solid #f1f5f9;
     }
 
-    [data-theme="dark"] .cm-variable {
-      color: #82aaff;
+    .CodeMirror-selected {
+      background: rgba(59, 130, 246, 0.35) !important;
     }
 
-    [data-theme="dark"] .cm-string {
-      color: #c3e88d;
-    }
-
-    [data-theme="dark"] .cm-comment {
-      color: #546e7a;
-    }
-
-    [data-theme="dark"] .cm-number {
-      color: #f78c6c;
-    }
-
-    [data-theme="dark"] .cm-operator {
-      color: #89ddff;
-    }
-
-    [data-theme="dark"] .cm-def {
-      color: #ffcb6b;
-    }
-
-    [data-theme="light"] .CodeMirror {
-      background: #ffffff;
-      color: #0f172a;
-    }
-
-    .right {
-      width: 420px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
+    .score-card {
+      background: linear-gradient(140deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.12));
+      border: 1px solid rgba(59, 130, 246, 0.25);
       border-radius: 16px;
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      box-shadow: 0 4px 6px -1px var(--shadow);
-      transition: all 0.3s ease;
-    }
-
-    .result-header {
-      display: flex;
-      align-items: center;
       gap: 10px;
-    }
-
-    .result-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 16px;
-    }
-
-    .result-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .score-display {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-      border: 2px solid var(--border-color);
-      border-radius: 16px;
-      padding: 28px;
       text-align: center;
-      position: relative;
-      overflow: hidden;
     }
 
-    .score-display::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-      animation: pulse 3s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-
-    .score-label {
-      font-size: 13px;
-      color: var(--text-tertiary);
+    .score-card span {
+      font-size: 12px;
+      color: #94a3b8;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 700;
-      position: relative;
-      z-index: 1;
+      letter-spacing: 0.4px;
     }
 
     .score-value {
-      font-size: 56px;
-      font-weight: 800;
-      margin: 12px 0;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      font-size: 44px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      position: relative;
-      z-index: 1;
-      letter-spacing: -2px;
+    }
+
+    .progress {
+      height: 8px;
+      width: 100%;
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      overflow: hidden;
     }
 
     .progress-bar {
-      height: 8px;
-      background: var(--bg-tertiary);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 16px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-      width: 0%;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 4px;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      transition: width 0.6s ease;
     }
 
     .metrics {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-      flex: 1;
     }
 
     .metric-card {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.15);
       border-radius: 12px;
-      padding: 16px;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .metric-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
-      transform: scaleY(0);
-      transition: transform 0.3s ease;
-    }
-
-    .metric-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 16px var(--shadow);
-    }
-
-    .metric-card:hover::before {
-      transform: scaleY(1);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .metric-label {
       font-size: 11px;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
+      color: #94a3b8;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
-      font-weight: 700;
+      text-transform: uppercase;
     }
 
     .metric-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text-primary);
+      font-size: 19px;
+      font-weight: 600;
+      color: #f8fafc;
     }
 
     .status {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
+      margin-top: 6px;
+      padding: 12px 14px;
       border-radius: 12px;
-      padding: 16px;
-      font-size: 14px;
-      color: var(--text-secondary);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      background: rgba(15, 23, 42, 0.6);
+      font-size: 13px;
+      color: #e2e8f0;
       text-align: center;
-      transition: all 0.3s ease;
-      font-weight: 600;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .status.error {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: var(--error);
-      color: var(--error);
-    }
+    .status.success { border-color: rgba(34, 197, 94, 0.35); color: #86efac; }
+    .status.error { border-color: rgba(248, 113, 113, 0.35); color: #fca5a5; }
+    .status.loading { border-color: rgba(96, 165, 250, 0.35); color: #bfdbfe; }
 
-    .status.success {
-      background: rgba(16, 185, 129, 0.1);
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .status.loading {
-      background: rgba(59, 130, 246, 0.1);
-      border-color: var(--accent-primary);
-      color: var(--accent-primary);
+    .loading-spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(148, 163, 184, 0.4);
+      border-top-color: #3b82f6;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .loading-spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border-color);
-      border-top-color: var(--accent-primary);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 10px;
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+      .CodeMirror { height: 360px; }
+    }
+    .example-btn {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(59, 130, 246, 0.18);
+      color: #cbd5f5;
     }
 
-    .subtitle {
-      font-size: 13px;
-      color: var(--text-tertiary);
-      font-weight: 500;
-    }
-
-    @media (max-width: 1200px) {
-      main {
-        flex-direction: column;
-      }
-      
-      .right {
-        width: 100%;
-      }
-      
-      .editors {
-        flex-direction: column;
-      }
+    .example-btn:hover {
+      background: rgba(59, 130, 246, 0.28);
+      border-color: rgba(148, 163, 184, 0.35);
+      transform: translateY(-1px);
     }
   </style>
 </head>
 
-<body data-theme="dark">
+<body>
   <header>
-    <div class="header-left">
-      <div class="logo">🧠</div>
-      <div>
-        <h1>CodePlag Analyzer</h1>
-        <div class="subtitle">Advanced Plagiarism Detection</div>
-      </div>
-    </div>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    <h1>🧠 CodePlag Analyzer</h1>
+    <div class="subtitle">Inspect how close two source snippets are in structure and tokens</div>
   </header>
 
   <main>
-    <div class="left">
-      <div class="controls">
-        <div class="control-group">
-          <label>Window Size:</label>
+    <section class="panel">
+      <div class="panel-title">Input snippets</div>
+      <div class="control-strip">
+        <label>Window
           <input type="number" id="windowInput" value="4" min="1" max="20">
-        </div>
+        </label>
         <button id="analyzeBtn">
-          <span>⚡</span>
-          Analyze Similarity
+          <span>🔍</span>
+          Analyze
         </button>
         <button id="clearBtn">
-          <span>🗑️</span>
+          <span>🧹</span>
           Clear
         </button>
+      </div>
+      <div class="control-strip" style="flex-wrap: wrap; background: rgba(30,41,59,0.55);">
+        <span style="font-size:12px; color:#cbd5f5;">Examples:</span>
+        <button class="example-btn" data-example="factorial">Recursive Factorial</button>
+        <button class="example-btn" data-example="sorting">Bubble vs Selection</button>
+        <button class="example-btn" data-example="strings">String Utilities</button>
       </div>
 
       <div class="editors">
         <div class="editor-panel">
           <div class="editor-header">
-            <div class="editor-title">
-              <h3>Code A</h3>
-              <span class="editor-badge">Source</span>
-            </div>
+            <span>Code A · Reference</span>
             <span class="token-count" id="tokensA">Tokens: —</span>
           </div>
           <textarea id="codeA"></textarea>
         </div>
-
         <div class="editor-panel">
           <div class="editor-header">
-            <div class="editor-title">
-              <h3>Code B</h3>
-              <span class="editor-badge">Target</span>
-            </div>
+            <span>Code B · Submission</span>
             <span class="token-count" id="tokensB">Tokens: —</span>
           </div>
           <textarea id="codeB"></textarea>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="right">
-      <div class="result-header">
-        <div class="result-icon">📊</div>
-        <h2 class="result-title">Analysis Results</h2>
-      </div>
-      
-      <div class="score-display">
-        <div class="score-label">Final Similarity Score</div>
-        <div class="score-value" id="finalScore">—</div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
+    <aside class="panel">
+      <div class="panel-title">Similarity results</div>
+      <div class="score-card">
+        <span>Final similarity</span>
+        <div id="finalScore" class="score-value">—</div>
+        <div class="progress">
+          <div id="progressFill" class="progress-bar"></div>
         </div>
       </div>
 
       <div class="metrics">
         <div class="metric-card">
-          <div class="metric-label">Jaccard Index</div>
+          <div class="metric-label">Jaccard</div>
           <div class="metric-value" id="jaccardValue">—</div>
         </div>
         <div class="metric-card">
@@ -651,34 +419,17 @@
         </div>
       </div>
 
-      <div class="status" id="statusMsg">Ready to analyze code</div>
-    </div>
+      <div id="statusMsg" class="status">Ready to analyze</div>
+    </aside>
   </main>
 
   <script>
-    // Theme Toggle
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    body.setAttribute('data-theme', currentTheme);
-    themeToggle.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
-    
-    themeToggle.addEventListener('click', () => {
-      const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      body.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
-    });
-
-    // Initialize CodeMirror editors
     const editorA = CodeMirror.fromTextArea(document.getElementById('codeA'), {
       mode: 'text/x-c++src',
       theme: 'default',
       lineNumbers: true,
       lineWrapping: true
     });
-
     const editorB = CodeMirror.fromTextArea(document.getElementById('codeB'), {
       mode: 'text/x-c++src',
       theme: 'default',
@@ -686,13 +437,10 @@
       lineWrapping: true
     });
 
-    // DOM elements
     const analyzeBtn = document.getElementById('analyzeBtn');
     const clearBtn = document.getElementById('clearBtn');
     const windowInput = document.getElementById('windowInput');
     const statusMsg = document.getElementById('statusMsg');
-
-    // Result elements
     const finalScore = document.getElementById('finalScore');
     const progressFill = document.getElementById('progressFill');
     const tokensA = document.getElementById('tokensA');
@@ -704,70 +452,106 @@
     const majorityValue = document.getElementById('majorityValue');
     const minorityValue = document.getElementById('minorityValue');
 
-    // Sample code for testing
-    const sampleCodeA = `int factorial(int n) {
-    if (n <= 1) return 1;
-    return n * factorial(n - 1);
-}`;
+    const examples = {
+      factorial: {
+        a: `int factorial(int n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}`,
+        b: `int fact(int num) {
+  if (num <= 1) return 1;
+  return num * fact(num - 1);
+}`
+      },
+      sorting: {
+        a: `void bubbleSort(vector<int>& arr) {
+  int n = arr.size();
+  for (int i = 0; i < n - 1; ++i) {
+    for (int j = 0; j < n - i - 1; ++j) {
+      if (arr[j] > arr[j + 1]) {
+        swap(arr[j], arr[j + 1]);
+      }
+    }
+  }
+}`,
+        b: `void selectionSort(vector<int>& arr) {
+  int n = arr.size();
+  for (int i = 0; i < n - 1; ++i) {
+    int minIdx = i;
+    for (int j = i + 1; j < n; ++j) {
+      if (arr[j] < arr[minIdx]) {
+        minIdx = j;
+      }
+    }
+    swap(arr[i], arr[minIdx]);
+  }
+}`
+      },
+      strings: {
+        a: `def normalize_phrase(text):
+  words = text.lower().split()
+  return " ".join(word.strip(".,?!") for word in words)
 
-    const sampleCodeB = `int fact(int num) {
-    if (num <= 1) return 1;
-    return num * fact(num - 1);
-}`;
+def count_letters(text):
+  return sum(1 for ch in text if ch.isalpha())`,
+        b: `def prepare_phrase(content):
+  tokens = content.lower().split()
+  return " ".join(piece.strip(".,?!") for piece in tokens)
 
-    editorA.setValue(sampleCodeA);
-    editorB.setValue(sampleCodeB);
+def count_alpha(text):
+  return sum(1 for ch in text if ch.isalpha())`
+      }
+    };
 
-    // Live token counting
-    function updateTokenCount() {
-      const codeA = editorA.getValue().trim();
-      const codeB = editorB.getValue().trim();
-      
-      const tokensACount = codeA ? tokenize(codeA).length : 0;
-      const tokensBCount = codeB ? tokenize(codeB).length : 0;
-      
-      tokensA.textContent = `Tokens: ${tokensACount}`;
-      tokensB.textContent = `Tokens: ${tokensBCount}`;
+    loadExample('factorial');
+    editorA.on('change', updateTokens);
+    editorB.on('change', updateTokens);
+
+    function updateTokens() {
+      tokensA.textContent = `Tokens: ${countTokens(editorA.getValue())}`;
+      tokensB.textContent = `Tokens: ${countTokens(editorB.getValue())}`;
     }
 
-    // Simple tokenizer for live counting
-    function tokenize(code) {
+    function countTokens(code) {
+      const trimmed = code.trim();
+      if (!trimmed) return 0;
       const tokens = [];
       let current = '';
-      
-      for (let i = 0; i < code.length; i++) {
-        const c = code[i];
-        if (/[a-zA-Z0-9_]/.test(c)) {
-          current += c;
+      for (const ch of trimmed) {
+        if (/[a-zA-Z0-9_]/.test(ch)) {
+          current += ch;
         } else {
           if (current) {
             tokens.push(current);
             current = '';
           }
-          if (!/\s/.test(c)) {
-            tokens.push(c);
+          if (!/\s/.test(ch)) {
+            tokens.push(ch);
           }
         }
       }
-      
       if (current) tokens.push(current);
-      return tokens;
+      return tokens.length;
     }
 
-    // Update token counts on editor change
-    editorA.on('change', updateTokenCount);
-    editorB.on('change', updateTokenCount);
-    
-    // Initial token count
-    updateTokenCount();
+    function loadExample(key) {
+      const preset = examples[key];
+      if (!preset) return;
+      editorA.setValue(preset.a);
+      editorB.setValue(preset.b);
+      updateTokens();
+      setStatus(`Loaded ${key} example.`, 'success');
+    }
 
-    // Analyze button handler
+    document.querySelectorAll('.example-btn').forEach(btn => {
+      btn.addEventListener('click', () => loadExample(btn.dataset.example));
+    });
+
     analyzeBtn.addEventListener('click', async () => {
       const codeA = editorA.getValue().trim();
       const codeB = editorB.getValue().trim();
-
       if (!codeA || !codeB) {
-        setStatus('⚠️ Please enter code in both editors', 'error');
+        setStatus('Please enter code in both editors', 'error');
         return;
       }
 
@@ -775,112 +559,74 @@
       setStatus('<span class="loading-spinner"></span>Analyzing code...', 'loading');
 
       try {
-        const window = parseInt(windowInput.value);
-        
+        const window = parseInt(windowInput.value, 10);
         const response = await fetch('/compare', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            codeA: codeA,
-            codeB: codeB,
-            window: window
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ codeA, codeB, window })
         });
 
         if (!response.ok) {
           throw new Error(`Server error: ${response.status}`);
         }
 
-        let result;
-        const text = await response.text();
-        
-        try {
-          result = JSON.parse(text);
-        } catch (e) {
-          const fixed = text
-            .replace(/\n\s*"FinalScore"/, ',\n  "FinalScore"')
-            .replace(/,(\s*[}\]])/g, '$1');
-          
-          try {
-            result = JSON.parse(fixed);
-          } catch (e2) {
-            console.error('Raw response:', text);
-            throw new Error('Invalid JSON from server');
-          }
-        }
+        const raw = await response.text();
+        const data = safeParse(raw);
+        if (!data) throw new Error('Invalid JSON from server');
+        if (data.error) throw new Error(data.error);
 
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        displayResults(result);
-        setStatus('✅ Analysis complete!', 'success');
+        displayResults(data);
+        setStatus('Analysis complete!', 'success');
       } catch (error) {
         console.error('Analysis error:', error);
-        setStatus(`❌ Error: ${error.message}`, 'error');
+        setStatus(`Error: ${error.message}`, 'error');
       } finally {
         analyzeBtn.disabled = false;
       }
     });
 
-    // Clear button handler
     clearBtn.addEventListener('click', () => {
       editorA.setValue('');
       editorB.setValue('');
       resetResults();
-      setStatus('Ready to analyze code', '');
+      setStatus('Ready to analyze', '');
     });
 
-    // Display results
+    function safeParse(text) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        try {
+          const cleaned = text
+            .replace(/\n\s*"FinalScore"/, ',\n  "FinalScore"')
+            .replace(/,(\s*[}\]])/g, '$1');
+          return JSON.parse(cleaned);
+        } catch {
+          return null;
+        }
+      }
+    }
+
     function displayResults(data) {
-      tokensA.textContent = `Tokens: ${data.tokensA || '—'}`;
-      tokensB.textContent = `Tokens: ${data.tokensB || '—'}`;
-      
+      tokensA.textContent = `Tokens: ${data.tokensA ?? '—'}`;
+      tokensB.textContent = `Tokens: ${data.tokensB ?? '—'}`;
       jaccardValue.textContent = formatScore(data.jaccard);
       editValue.textContent = formatScore(data.editSimilarity);
       astValue.textContent = formatScore(data.astStructural);
       pdgValue.textContent = formatScore(data.pdgSimilarity);
       majorityValue.textContent = formatScore(data.majorityScore);
       minorityValue.textContent = formatScore(data.minorityScore);
-      
-      const score = data.FinalScore || 0;
-      animateScore(score);
-      progressFill.style.width = `${score * 100}%`;
+
+      const score = typeof data.FinalScore === 'number' ? data.FinalScore : 0;
+      finalScore.textContent = formatScore(score);
+      progressFill.style.width = `${Math.max(0, Math.min(1, score)) * 100}%`;
     }
 
-    // Animate score from 0 to target value
-    function animateScore(targetScore) {
-      const duration = 1500; // 1.5 seconds
-      const fps = 60;
-      const totalFrames = (duration / 1000) * fps;
-      let currentFrame = 0;
-      
-      const interval = setInterval(() => {
-        currentFrame++;
-        const progress = currentFrame / totalFrames;
-        
-        // Ease out cubic for smooth deceleration
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const currentScore = targetScore * easeProgress;
-        
-        finalScore.textContent = formatScore(currentScore);
-        
-        if (currentFrame >= totalFrames) {
-          clearInterval(interval);
-          finalScore.textContent = formatScore(targetScore);
-        }
-      }, 1000 / fps);
-    }
-
-    // Format score
     function formatScore(value) {
-      if (value === undefined || value === null) return '—';
+      if (typeof value !== 'number' || Number.isNaN(value)) return '—';
       return (value * 100).toFixed(2) + '%';
     }
 
-    // Reset results
     function resetResults() {
       tokensA.textContent = 'Tokens: —';
       tokensB.textContent = 'Tokens: —';
@@ -894,10 +640,10 @@
       minorityValue.textContent = '—';
     }
 
-    // Set status message
     function setStatus(msg, type) {
       statusMsg.innerHTML = msg;
-      statusMsg.className = 'status ' + type;
+      statusMsg.className = 'status';
+      if (type) statusMsg.classList.add(type);
     }
   </script>
 </body>
