@@ -197,14 +197,14 @@ Check the Flask server console for incoming requests and for any stderr from the
 
 ## ⚙️ Notes on building and configuration
 
-- If `server.py` executes the C++ binary, it may reference an absolute path. Edit `server.py` to point to the local binary path (e.g., `./social_graph_core`).
+- If `server.py` executes the C++ binary, it may reference an absolute path. Edit `server.py` to point to the local binary path (e.g., `./plagiarism_core`).
 - If your backend requires a CSV dataset (e.g., `dataset/users.csv`), create that file under `Backend/` and ensure `server.py` or the C++ binary reads from the correct path.
 
 Common change (edit inside `server.py` if present):
 
 ```python
 # Example: adjust these constants to your layout
-BACKEND_BINARY = './social_graph_core'
+BACKEND_BINARY = './plagiarism_core'
 DATA_CSV = './dataset/users.csv'
 ```
 
