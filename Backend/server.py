@@ -2,7 +2,7 @@ from flask import Flask, request, Response, jsonify, send_from_directory
 from flask_cors import CORS
 import subprocess, os
 
-app = Flask(__name__, static_folder="../static", static_url_path="")
+app = Flask(__name__, static_folder="../Frontend", static_url_path="")
 CORS(app)
 
 # Path to binary
@@ -39,7 +39,7 @@ def compare():
     output = p.stdout.decode()
     return Response(output, mimetype="application/json")
 
-# Serve css/js
+# Serve css/js if any
 @app.route("/<path:filename>")
 def serve_static(filename):
     return send_from_directory(app.static_folder, filename)
