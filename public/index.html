@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CodePlag Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"/>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1>🧠 CodePlag Analyzer</h1>
+    <div class="subtitle">Inspect how close two source snippets are in structure and tokens</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-title">Input snippets</div>
+      <div class="control-strip">
+        <label>Window
+          <input type="number" id="windowInput" value="4" min="1" max="20">
+        </label>
+        <button id="analyzeBtn">
+          <span>🔍</span>
+          Analyze
+        </button>
+        <button id="clearBtn">
+          <span>🧹</span>
+          Clear
+        </button>
+      </div>
+      <div class="control-strip" style="flex-wrap: wrap; background: rgba(30,41,59,0.55);">
+        <span style="font-size:12px; color:#cbd5f5;">Examples:</span>
+        <button class="example-btn" data-example="factorial">Recursive Factorial</button>
+        <button class="example-btn" data-example="sorting">Bubble vs Selection</button>
+        <button class="example-btn" data-example="strings">String Utilities</button>
+      </div>
+
+      <div class="editors">
+        <div class="editor-panel">
+          <div class="editor-header">
+            <span>Code A · Reference</span>
+            <span class="token-count" id="tokensA">Tokens: —</span>
+          </div>
+          <textarea id="codeA"></textarea>
+        </div>
+        <div class="editor-panel">
+          <div class="editor-header">
+            <span>Code B · Submission</span>
+            <span class="token-count" id="tokensB">Tokens: —</span>
+          </div>
+          <textarea id="codeB"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel-title">Similarity results</div>
+      <div class="score-card">
+        <span>Final similarity</span>
+        <div id="finalScore" class="score-value">—</div>
+        <div class="progress">
+          <div id="progressFill" class="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card">
+          <div class="metric-label">Jaccard</div>
+          <div class="metric-value" id="jaccardValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Edit Similarity</div>
+          <div class="metric-value" id="editValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">AST Structural</div>
+          <div class="metric-value" id="astValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">PDG Similarity</div>
+          <div class="metric-value" id="pdgValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Majority Score</div>
+          <div class="metric-value" id="majorityValue">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Minority Score</div>
+          <div class="metric-value" id="minorityValue">—</div>
+        </div>
+      </div>
+
+      <div id="statusMsg" class="status">Ready to analyze</div>
+    </aside>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
