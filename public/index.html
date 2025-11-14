@@ -4,73 +4,84 @@
   <meta charset="utf-8" />
   <title>CodePlag Analyzer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"/>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
 </head>
 
-<body>
+<body data-theme="dark">
   <header>
-    <h1>🧠 CodePlag Analyzer</h1>
-    <div class="subtitle">Inspect how close two source snippets are in structure and tokens</div>
+    <div class="header-left">
+      <div class="logo">🧠</div>
+      <div>
+        <h1>CodePlag Analyzer</h1>
+        <div class="subtitle">Advanced Plagiarism Detection</div>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
   </header>
 
   <main>
-    <section class="panel">
-      <div class="panel-title">Input snippets</div>
-      <div class="control-strip">
-        <label>Window
+    <div class="left">
+      <div class="controls">
+        <div class="control-group">
+          <label>Window Size:</label>
           <input type="number" id="windowInput" value="4" min="1" max="20">
-        </label>
+        </div>
         <button id="analyzeBtn">
-          <span>🔍</span>
-          Analyze
+          <span>⚡</span>
+          Analyze Similarity
         </button>
         <button id="clearBtn">
-          <span>🧹</span>
+          <span>🗑</span>
           Clear
         </button>
-      </div>
-      <div class="control-strip" style="flex-wrap: wrap; background: rgba(30,41,59,0.55);">
-        <span style="font-size:12px; color:#cbd5f5;">Examples:</span>
-        <button class="example-btn" data-example="factorial">Recursive Factorial</button>
-        <button class="example-btn" data-example="sorting">Bubble vs Selection</button>
-        <button class="example-btn" data-example="strings">String Utilities</button>
       </div>
 
       <div class="editors">
         <div class="editor-panel">
           <div class="editor-header">
-            <span>Code A · Reference</span>
+            <div class="editor-title">
+              <h3>Code A</h3>
+              <span class="editor-badge">Source</span>
+            </div>
             <span class="token-count" id="tokensA">Tokens: —</span>
           </div>
           <textarea id="codeA"></textarea>
         </div>
+
         <div class="editor-panel">
           <div class="editor-header">
-            <span>Code B · Submission</span>
+            <div class="editor-title">
+              <h3>Code B</h3>
+              <span class="editor-badge">Target</span>
+            </div>
             <span class="token-count" id="tokensB">Tokens: —</span>
           </div>
           <textarea id="codeB"></textarea>
         </div>
       </div>
-    </section>
+    </div>
 
-    <aside class="panel">
-      <div class="panel-title">Similarity results</div>
-      <div class="score-card">
-        <span>Final similarity</span>
-        <div id="finalScore" class="score-value">—</div>
-        <div class="progress">
-          <div id="progressFill" class="progress-bar"></div>
+    <div class="right">
+      <div class="result-header">
+        <div class="result-icon">📊</div>
+        <h2 class="result-title">Analysis Results</h2>
+      </div>
+      
+      <div class="score-display">
+        <div class="score-label">Final Similarity Score</div>
+        <div class="score-value" id="finalScore">—</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
         </div>
       </div>
 
       <div class="metrics">
         <div class="metric-card">
-          <div class="metric-label">Jaccard</div>
+          <div class="metric-label">Jaccard Index</div>
           <div class="metric-value" id="jaccardValue">—</div>
         </div>
         <div class="metric-card">
@@ -95,8 +106,8 @@
         </div>
       </div>
 
-      <div id="statusMsg" class="status">Ready to analyze</div>
-    </aside>
+      <div class="status" id="statusMsg">Ready to analyze code</div>
+    </div>
   </main>
 
   <script src="script.js"></script>
