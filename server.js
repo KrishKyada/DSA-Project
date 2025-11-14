@@ -20,7 +20,7 @@ app.get("/favicon.ico", (req, res) => {
 });
 
 // Path to the C++ binary
-const binaryPath = path.join(__dirname, "Backend", "plagiarism_core");
+const binaryPath = path.join(__dirname, "Backend", "code.exe");
 
 // Root route - serve index.html
 app.get("/", (req, res) => {
