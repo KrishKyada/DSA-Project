@@ -56,6 +56,7 @@ app.post("/compare", (req, res) => {
 
   let output = "";
   let errorOutput = "";
+  let responseSent = false;
 
   childProcess.stdout.on("data", (data) => {
     output += data.toString();
@@ -66,6 +67,9 @@ app.post("/compare", (req, res) => {
   });
 
   childProcess.on("close", (code) => {
+    if (responseSent) return;
+    responseSent = true;
+
     if (code !== 0) {
       return res.status(500).json({
         error: "C++ binary execution failed",
@@ -90,8 +94,10 @@ app.post("/compare", (req, res) => {
 
   // Timeout after 30 seconds
   setTimeout(() => {
+    if (responseSent) return;
     if (!childProcess.killed) {
       childProcess.kill();
+      responseSent = true;
       return res.status(500).json({ error: "Process timeout" });
     }
   }, 30000);
