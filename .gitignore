@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+*.o
+*.out
+*.exe
+build/
+dist/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Compiled C++ binaries (optional - you may want to exclude these from git)
+Backend/plagiarism_core
+Backend/plagiarism_core.exe
+
+# Python files (legacy - no longer used but keeping for reference)
+*.pyc
+__pycache__/
+.venv/
+venv/
+*.egg-info/
+
+# Project specific
+*.log
